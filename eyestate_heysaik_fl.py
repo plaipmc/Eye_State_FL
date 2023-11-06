@@ -53,17 +53,18 @@ class testData(Dataset):
         return len(self.X_data)
 
 
-def accuracy(y_pred, y_test):
+def accuracy_func(y_pred, y_test):
     y_pred_tag = torch.round(torch.sigmoid(y_pred))
 
     correct_results_sum = (y_pred_tag == y_test).sum().float()
-    acc = correct_results_sum/y_test.shape[0]
-    acc = torch.round(acc * 100)
+    accu = correct_results_sum/y_test.shape[0]
+    accu = torch.round(accu * 100)
     
-    return acc
+    return accu
 
 
 def main():
+    global accuracy
 
     # Data loading and preprocessing
     data = pd.read_csv('https://raw.githubusercontent.com/plaipmc/Eye_State_FL/main/eeg_eye_state.csv')
@@ -104,6 +105,8 @@ def main():
         net.to(DEVICE)
         criterion = criterion.to(DEVICE)
 
+        steps = EPOCHS * len(train_loader)
+
         for e in range(1, EPOCHS+1):
             epoch_loss = 0
             epoch_acc = 0
@@ -114,7 +117,7 @@ def main():
                 
                 y_pred = net(X_batch)
                 loss = criterion(y_pred, y_batch.unsqueeze(1))
-                acc = accuracy(y_pred, y_batch.unsqueeze(1))
+                acc = accuracy_func(y_pred, y_batch.unsqueeze(1))
                 
                 loss.backward()
                 optimizer.step()
