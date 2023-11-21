@@ -84,12 +84,11 @@ def main():
     # sprint(data)
     X = data.iloc[:,0:14]
     y = data.iloc[:,14]
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25)
-
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
     scaler = StandardScaler()
     X_train = scaler.fit_transform(X_train)
     X_test = scaler.fit_transform(X_test)
-    train_data = trainData(torch.FloatTensor(X_train), torch.FloatTensor(y_train.values))
+    train_data = trainData(torch.FloatTensor(X_train), torch.FloatTensor(y_train))
     test_data = testData(torch.FloatTensor(X_test))
     
     BATCH_SIZE = 64

@@ -82,6 +82,17 @@ def collate_fn(data: list[tuple[torch.Tensor, torch.Tensor]]):
     targets = torch.stack(targets)
     return features, targets
 
+def print_class(y_train_print, y_test_print):
+    print ("----------------------")
+    print ("Train data distribution")
+    print(f'Train class 0 : {y_train_print.count(0)} about {y_train_print.count(0)/(y_train_print.count(0)+y_train_print.count(1)):.3f}%')
+    print(f'Train class 1 : {y_train_print.count(1)} about {y_train_print.count(1)/(y_train_print.count(0)+y_train_print.count(1)):.3f}%')
+    print ("----------------------")
+    print ("Test data distribution")
+    print(f'Test class 0 : {y_test_print.count(0)} about {y_test_print.count(0)/(y_test_print.count(0)+y_test_print.count(1)):.3f}%')
+    print(f'Test class 1 : {y_test_print.count(1)} about {y_test_print.count(1)/(y_test_print.count(0)+y_test_print.count(1)):.3f}%')
+    print ("----------------------")
+
 def main():
 
     # Data loading and preprocessing
@@ -118,16 +129,19 @@ def main():
         
         # Sample elements randomly from a given list of ids, no replacement.
         train_subsampler = torch.utils.data.SubsetRandomSampler(train_ids)
+        
         test_subsampler = torch.utils.data.SubsetRandomSampler(test_ids)
         
         # Define data loaders for training and testing data in this fold
         train_loader = torch.utils.data.DataLoader(
                           dataset, 
-                          batch_size=10, sampler=train_subsampler, collate_fn = collate_fn,drop_last=True) #,collate_fn=lambda x: x
+                          batch_size=64, sampler=train_subsampler, collate_fn = collate_fn,drop_last=True) #,collate_fn=lambda x: x
         test_loader = torch.utils.data.DataLoader(
                           dataset,
-                          batch_size=10, sampler=test_subsampler, collate_fn = collate_fn,drop_last=True)
-    
+                          batch_size=1, sampler=test_subsampler, collate_fn = collate_fn,drop_last=True)
+
+        y_testp = []
+        y_trainp = []
         net = Net()
         net.apply(reset_weights)
 
@@ -145,7 +159,7 @@ def main():
             
             for X_batch, y_batch in train_loader:
                 optimizer.zero_grad()
-            
+                y_trainp.append(y_batch.numpy().tolist())
                 y_pred = net(X_batch)
                 loss = criterion(y_pred, y_batch.unsqueeze(1))
                 acc = accuracy(y_pred, y_batch.unsqueeze(1))
@@ -178,6 +192,7 @@ def main():
                 y_test_pred = net(X_batch)
                 y_test_pred = torch.sigmoid(y_test_pred)
                 y_pred_tag = torch.round(y_test_pred)
+                y_testp.append(y_batch.numpy().tolist()[0])
 
                 y_batch_array = y_batch.numpy()
                 y_pred_tag_array = y_pred_tag[:].numpy().flatten()
@@ -187,6 +202,14 @@ def main():
                 total += y_batch.size(0)
                 correct += (y_pred_tag_array == y_batch_array).sum().item()
 
+        y_trainprint = [int(x[0]) for x in y_trainp]
+        y_testprint = [int(x) for x in y_testp]
+
+        
+        print('--------------------------------')
+        print(f'FOLD {fold}')
+        print_class(y_trainprint, y_testprint)
+        
         y_pred_list = [j for sub in y_pred_list for j in sub]
         y_test = [i for sub in y_test for i in sub]
 
