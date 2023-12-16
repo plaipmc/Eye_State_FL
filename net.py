@@ -28,6 +28,15 @@ class Net(nn.Module):
         self.dropout = nn.Dropout(p=0.25)
         self.batchnorm1 = nn.BatchNorm1d(64)
         self.batchnorm2 = nn.BatchNorm1d(64)
+        # Initialize weights for reproduce
+        self._initialize_weights()
+
+    # For reproduce
+    def _initialize_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Linear):
+                nn.init.xavier_normal_(m.weight)  # Initialize weights using Xavier initialization
+                nn.init.constant_(m.bias, 0)      # Initialize biases to zeros
 
 
     def forward(self, x):

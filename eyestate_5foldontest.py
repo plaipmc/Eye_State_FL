@@ -9,6 +9,7 @@ import torch.optim as optim
 import torchvision
 import torchvision.transforms as transforms
 from net import Net
+import time
 
 # Add library
 import numpy as np
@@ -19,6 +20,7 @@ from sklearn.metrics import confusion_matrix, classification_report
 from torch.utils.data import Dataset, DataLoader, ConcatDataset, TensorDataset
 from sklearn.model_selection import KFold
 from torch.nn.utils.rnn import pad_sequence
+from statistics import stdev
 #from tqdm import tqdm
 
 import warnings
@@ -75,6 +77,11 @@ def reset_weights(m):
    if hasattr(layer, 'reset_parameters'):
     #print(f'Reset trainable parameters of layer = {layer}')
     layer.reset_parameters()
+    #dic = m.state_dict()
+    #for k in dic:
+    #    dic[k] *= 0
+    #m.load_state_dict(dic)
+    #del(dic)
 
 def collate_fn(data: list[tuple[torch.Tensor, torch.Tensor]]):
     tensors, targets = zip(*data)
@@ -94,7 +101,7 @@ def print_class(y_train_print, y_test_print):
     print ("----------------------")
 
 def main():
-
+    st = time.time()
     # Data loading and preprocessing
     data = pd.read_csv('https://raw.githubusercontent.com/plaipmc/Eye_State_FL/main/eeg_eye_state.csv')
     # print(data)
@@ -103,8 +110,10 @@ def main():
     scaler = StandardScaler()
     X = scaler.fit_transform(X)
 
+    random_state_set = 1000
+
     # 75 25 
-    X_train, X_test, y_train, y_test_last = train_test_split(X, y, test_size=0.25)
+    X_train, X_test, y_train, y_test_last = train_test_split(X, y, test_size=0.25,random_state=random_state_set)
 
     dataset = TensorDataset( torch.FloatTensor(X_train), torch.FloatTensor(y_train.values) )
     
@@ -115,10 +124,11 @@ def main():
     k_folds = 5
     # For fold results
     results = {}
+    acc_all_fold =[]
 
     # Add 5 fold 07/11
     # Define the K-fold Cross Validator
-    kfold = KFold(n_splits=k_folds, shuffle=True)
+    kfold = KFold(n_splits=k_folds)#, shuffle=True,random_state=random_state_set)
     
     # Start print
     print('--------------------------------')
@@ -146,7 +156,7 @@ def main():
         y_testp = []
         y_trainp = []
         net = Net()
-        net.apply(reset_weights)
+        #net.apply(reset_weights)
 
         criterion = nn.BCEWithLogitsLoss()
         optimizer = optim.Adam(net.parameters(), lr=LEARNING_RATE)
@@ -177,7 +187,7 @@ def main():
 
         print("Finished Training")
 
-        PATH = "./eye_state_net"+ str(fold) +".pth"
+        PATH = "./eye_state_net"+ str(fold) +"_state"+str(random_state_set)+".pth"
         torch.save(net.state_dict(), PATH)
 
         net = Net()
@@ -221,6 +231,7 @@ def main():
         print('Accuracy for fold %d: %d %%' % (fold, 100.0 * correct / total))
         print('--------------------------------')
         results[fold] = 100.0 * (correct / total)
+        acc_all_fold.append(100.0 * (correct / total))
 
     # Print fold results
     print(f'K-FOLD CROSS VALIDATION RESULTS FOR {k_folds} FOLDS')
@@ -239,13 +250,18 @@ def main():
     print(f'select model {maxaccfold}')
 
     # select best model
-    PATH = "./eye_state_net"+ str(maxaccfold) +".pth"
+    PATH = "./eye_state_net"+ str(maxaccfold) +"_state"+str(random_state_set)+".pth"
     net = Net()
     net.load_state_dict(torch.load(PATH))
     # (optional) use GPU to speed things up
     net.to(DEVICE)
 
-    # Test 
+    # Test
+    print ("----------------------")
+    print ("Test data distribution")
+    print(f'Test class 0 : {(y_test_last == 0.0).sum()} about {(y_test_last == 0.0).sum()/((y_test_last == 0.0).sum()+(y_test_last == 1.0).sum()):.3f}%')
+    print(f'Test class 1 : {(y_test_last == 1.0).sum()} about {(y_test_last == 1.0).sum()/((y_test_last == 0.0).sum()+(y_test_last == 1.0).sum()):.3f}%')
+    print ("----------------------")
     test_data = testData(torch.FloatTensor(X_test))
     test_loader2 = DataLoader(dataset=test_data, batch_size=1)
     net.eval()
@@ -265,7 +281,10 @@ def main():
     #y_testprint = [int(x) for x in y_testp]
     print(classification_report(y_test_last, y_pred_final))
     
-
+    print("The Standard Deviation of Sample1 is % s" %(stdev(acc_all_fold)))
+    et = time.time()
+    elapsed_time = et - st
+    print('Execution time:', elapsed_time, 'seconds')
 
 if __name__ == "__main__":
     main()
