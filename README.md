@@ -18,6 +18,41 @@
 * scikit-learn version 1.3.2
 * NVFLARE version 2.4.0
 
+## โครงสร้างของโฟลเดอร์
+[link เพื่อไปยังโฟลเดอร์โปรเจกต์](https://drive.google.com/drive/folders/1GfsjsfExnsk-DcVbvLaQlxsFs4at9xBq?usp=sharing)
+แบ่งเป็นโฟลเดอร์ย่อยดังนี้
+
+ - **src/** 
+	 - preparedata
+		 - collectC5S1C1_fix.py
+		 - collectC5S1C1.py
+		 - collectC5S1C2_fix.py
+		 - collectC5S1C2.py
+		 - collectC5S1C3_fix.py
+		 - collectC5S1C3.py
+		 - collectC5S5C1_fix.py
+		 - collectC5S5C1.py
+		 - collectC5S5C2_fix.py
+		 - collectC5S5C2.py
+		 - collectC5S5C3_fix.py
+		 - collectC5S5C3.py
+		 - collectC5S10C1_fix.py
+		 - collectC5S10C1.py
+		 - collectC5S10C2_fix.py
+		 - collectC5S10C2.py
+		 - collectC5S10C3_fix.py
+		 - collectC5S10C3.py
+	 - dataset.zip
+	 - result.zip
+	 - ubuntu.zip
+	 - README.md
+- **doc/**
+	- 66-2_CS402-403_66-1_28_wdp-r1.pdf
+	- 66-2_CS402-403_66-1_28_wdp-r1_abstract_en.txt
+	- 66-2_CS402-403_66-1_28_wdp-r1_abstract_th.txt
+- **demo/**
+	- 66-2_CS402-403_66-1_28_wdp-r1_demo.mp4
+
 #### ไฟล์และโฟลเดอร์ที่เกี่ยวข้อง
 * dataset เป็นโฟลเดอร์ที่เก็บข้อมูล dataset ทั้งหมดที่ใช้และมีการแบ่งเป็น Training, Validating, Test dataset แล้ว
 * preparedata เป็นโฟลเดอร์ที่เก็บไฟล์ที่ใช้ในการสร้างชุดข้อมูลให้แต่ละ client
